@@ -34,7 +34,7 @@
             document.getElementById('alertSound').play().then(() => {
                 soundEnabled = true;
                 document.getElementById('status').innerText = 'Doorbell Enabled! Waiting for Signal...';
-                alert('Doorbell sound enabled successfully!');
+                document.getElementById('enableSound').style.display = 'none'; // 隱藏按鈕
             }).catch((error) => {
                 console.error('Error enabling sound:', error);
             });
@@ -45,7 +45,7 @@
             const data = snapshot.val();
             if (data && data.triggered && soundEnabled) {
                 document.getElementById('alertSound').play(); // Play sound
-                alert('Signal received! Playing sound...');
+                document.getElementById('status').innerText = 'Signal received! Playing sound...';
                 firebase.database().ref('signal').set({ triggered: false }); // Reset the signal
             }
         });
