@@ -3,15 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>B Website - FCM Notification</title>
-    <link rel="manifest" href="manifest.json">
+    <title>B Website - Background Notification</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-messaging.js"></script>
 </head>
 <body style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh;">
-    <h1 id="status">Waiting for Signal...</h1>
-    <audio id="alertSound" src="sound.mp3" preload="auto"></audio>
-    <button id="enableSound" style="padding: 10px 20px; font-size: 18px; margin-top: 20px;">Enable Notifications</button>
+    <h1 id="status">Waiting for Notification...</h1>
+    <button id="enableNotificationBtn" style="padding: 10px 20px; font-size: 18px; margin-top: 20px;">Enable Notifications</button>
 
     <script>
         // Firebase configuration
@@ -28,27 +26,43 @@
         firebase.initializeApp(firebaseConfig);
         const messaging = firebase.messaging();
 
-        // Request permission for notifications and get token
-        document.getElementById('enableSound').addEventListener('click', () => {
-            messaging.requestPermission().then(() => {
-                console.log('Notification permission granted.');
-                return messaging.getToken({ vapidKey: 'BDj1xe7CXpoitlZyQCfmGZmwQ1jYiPWp7ZNOurl...（完整 VAPID 金鑰）' });
-            }).then((token) => {
-                console.log('FCM Token:', token);
-                document.getElementById('status').innerText = 'Notification Enabled! Waiting for Signal...';
-                document.getElementById('enableSound').style.display = 'none';
-            }).catch((error) => {
-                console.error('Error getting FCM token:', error);
-            });
-        });
+        // Register service worker and initialize messaging
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then((registration) => {
+                    console.log('Service Worker registered with scope:', registration.scope);
+                    messaging.useServiceWorker(registration);
 
-        // Handle foreground messages
-        messaging.onMessage((payload) => {
-            console.log('Message received. ', payload);
-            const alertSound = document.getElementById('alertSound');
-            alertSound.play();
-            document.getElementById('status').innerText = 'Notification received: ' + payload.notification.body;
-        });
+                    document.getElementById('enableNotificationBtn').addEventListener('click', () => {
+                        requestNotificationPermission();
+                    });
+                })
+                .catch((error) => {
+                    console.error('Service Worker registration failed:', error);
+                });
+        }
+
+        function requestNotificationPermission() {
+            messaging.requestPermission()
+                .then(() => {
+                    console.log('Notification permission granted.');
+                    return messaging.getToken({ vapidKey: 'BDj1xe7CXpoitlZyQCfmGZmwQ1jYiPWp7ZNOurl...' }); // 已替換為你的 VAPID 公開金鑰
+                })
+                .then((token) => {
+                    console.log('FCM Token:', token);
+                    document.getElementById('status').innerText = 'Notification Enabled!';
+                })
+                .catch((error) => {
+                    console.error('Error getting FCM token:', error);
+                    document.getElementById('status').innerText = 'Error enabling notifications.';
+                });
+
+            // Handle foreground messages
+            messaging.onMessage((payload) => {
+                console.log('Message received in foreground: ', payload);
+                alert('Notification: ' + payload.notification.body);
+            });
+        }
     </script>
 </body>
 </html>
