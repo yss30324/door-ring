@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>B Website - Play Sound</title>
+    <title>B Website - Play Sound & Notification</title>
+    <link rel="manifest" href="manifest.json">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
@@ -30,6 +31,15 @@
 
         let soundEnabled = false;
 
+        // Register the service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js').then((registration) => {
+                console.log('Service Worker registered with scope:', registration.scope);
+            }).catch((error) => {
+                console.error('Service Worker registration failed:', error);
+            });
+        }
+
         document.getElementById('enableSound').addEventListener('click', () => {
             // Request notification permission
             if (Notification.permission !== 'granted') {
@@ -54,21 +64,10 @@
             const data = snapshot.val();
             if (data && data.triggered && soundEnabled) {
                 document.getElementById('alertSound').play(); // Play sound
-                showNotification('Doorbell Alert', 'Someone pressed the button on A Website!');
                 document.getElementById('status').innerText = 'Signal received! Playing sound...';
                 firebase.database().ref('signal').set({ triggered: false }); // Reset the signal
             }
         });
-
-        // Function to show a notification
-        function showNotification(title, body) {
-            if (Notification.permission === 'granted') {
-                new Notification(title, {
-                    body: body,
-                    icon: 'https://example.com/icon.png'  // Replace with your icon URL
-                });
-            }
-        }
     </script>
 </body>
 </html>
