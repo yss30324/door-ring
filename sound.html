@@ -3,59 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sound Notification</title>
+  <title>Firebase Cloud Messaging</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-messaging.js"></script>
 </head>
 <body>
   <h1>Waiting for Notification...</h1>
   <button id="enable-notifications">Enable Notifications</button>
 
-  <script type="module">
-    // Import Firebase SDKs
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js";
-    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-messaging.js";
-
+  <script>
     // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyDAtc-bmRRAIdchAj3diwV3nYkRPzIfXkM",
       authDomain: "doorring-abd1a.firebaseapp.com",
+      databaseURL: "https://doorring-abd1a-default-rtdb.firebaseio.com",
       projectId: "doorring-abd1a",
-      storageBucket: "doorring-abd1a.appspot.com",
+      storageBucket: "doorring-abd1a.firebasestorage.app",
       messagingSenderId: "135920861263",
       appId: "1:135920861263:web:c32e01aa9f3e1312e02a3a",
       measurementId: "G-J6QPQSKTD4"
     };
 
     // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const messaging = getMessaging(app);
+    const app = firebase.initializeApp(firebaseConfig);
+    const messaging = firebase.messaging();
 
-    // Register the service worker
-    navigator.serviceWorker.register('/door-ring/firebase-messaging-sw.js')
-      .then((registration) => {
-        console.log('Service Worker registered with scope:', registration.scope);
-      })
-      .catch((error) => {
-        console.error('Service Worker registration failed:', error);
-      });
+    // Set VAPID key
+    messaging.usePublicVapidKey("BDj1xe7CXpoittZlyQCfmGZmwQ1jYiPWp7ZNOurlee7zhXREiUFj9zU5skMIKypRcU-QcfDZpR_nwBCtbRzsZUQ");
 
+    // Request permission and get token
     document.getElementById('enable-notifications').addEventListener('click', async () => {
       try {
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-          console.log('Notification permission granted.');
-          const token = await getToken(messaging, { vapidKey: '你的公開金鑰' });
-          console.log('FCM Token:', token);
-        } else {
-          console.log('Notification permission denied.');
-        }
+        const token = await messaging.getToken();
+        console.log('FCM Token:', token);
+        alert('Notifications enabled! Check the console for the token.');
       } catch (error) {
         console.error('Error enabling notifications:', error);
       }
     });
 
-    onMessage(messaging, (payload) => {
+    // Handle incoming messages
+    messaging.onMessage((payload) => {
       console.log('Message received:', payload);
-      alert(`Notification received: ${payload.notification.title}`);
+      alert('New notification received!');
     });
   </script>
 </body>
