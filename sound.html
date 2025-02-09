@@ -12,7 +12,6 @@
   <button id="enable-notifications">Enable Notifications</button>
 
   <script>
-    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyDAtc-bmRRAIdchAj3diwV3nYkRPzIfXkM",
       authDomain: "doorring-abd1a.firebaseapp.com",
@@ -24,17 +23,14 @@
       measurementId: "G-J6QPQSKTD4"
     };
 
-    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const messaging = firebase.messaging();
 
-    // Set VAPID key
-    messaging.usePublicVapidKey("BDj1xe7CXpoittZlyQCfmGZmwQ1jYiPWp7ZNOurlee7zhXREiUFj9zU5skMIKypRcU-QcfDZpR_nwBCtbRzsZUQ");
-
-    // Request permission and get token
     document.getElementById('enable-notifications').addEventListener('click', async () => {
       try {
-        const token = await messaging.getToken();
+        const token = await messaging.getToken({
+          vapidKey: "BDj1xe7CXpoittZlyQCfmGZmwQ1jYiPWp7ZNOurlee7zhXREiUFj9zU5skMIKypRcU-QcfDZpR_nwBCtbRzsZUQ"
+        });
         console.log('FCM Token:', token);
         alert('Notifications enabled! Check the console for the token.');
       } catch (error) {
@@ -42,7 +38,6 @@
       }
     });
 
-    // Handle incoming messages
     messaging.onMessage((payload) => {
       console.log('Message received:', payload);
       alert('New notification received!');
