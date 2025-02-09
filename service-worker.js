@@ -1,15 +1,23 @@
-self.addEventListener('push', (event) => {
-  const data = event.data ? event.data.json() : {};
+// service-worker.js
+self.addEventListener('push', function(event) {
+  const notificationData = event.data.json();
+  console.log('Push received: ', notificationData);
+
+  const title = notificationData.notification.title;
+  const options = {
+    body: notificationData.notification.body,
+    icon: 'icon.png',  // 可以自定義通知的圖示
+    badge: 'badge.png' // 可選的小圖標
+  };
+
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Doorbell Alert', {
-      body: data.body || 'Someone pressed the button!',
-      icon: 'icon.png',
-      tag: 'doorbell-notification'  // 確保不會多次顯示相同通知
-    })
+    self.registration.showNotification(title, options)
   );
 });
 
-self.addEventListener('notificationclick', (event) => {
+self.addEventListener('notificationclick', function(event) {
   event.notification.close();
-  clients.openWindow('sound.html');  // 開啟 B 網站
+  event.waitUntil(
+    clients.openWindow('https://your-website-url.com')  // 點擊通知後開啟的網頁
+  );
 });
