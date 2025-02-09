@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Website - Trigger Signal</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+</head>
+<body style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+    <button id="trigger" style="padding: 20px; font-size: 24px;">Trigger Signal on B Website</button>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDAtc-bmRRAIdchAj3diwV3nYkRPzIfXkM",
+            authDomain: "doorring-abd1a.firebaseapp.com",
+            databaseURL: "https://doorring-abd1a-default-rtdb.firebaseio.com",
+            projectId: "doorring-abd1a",
+            storageBucket: "doorring-abd1a.firebasestorage.app",
+            messagingSenderId: "135920861263",
+            appId: "1:135920861263:web:c32e01aa9f3e1312e02a3a",
+            measurementId: "G-J6QPQSKTD4"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database(app);
+
+        document.getElementById('trigger').addEventListener('click', () => {
+            const timestamp = Date.now();
+            firebase.database().ref('signal').set({ triggered: true, timestamp: timestamp });
+            alert('Signal sent!');
+        });
+    </script>
+</body>
+</html>
