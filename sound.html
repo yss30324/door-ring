@@ -26,22 +26,33 @@
     firebase.initializeApp(firebaseConfig);
     const messaging = firebase.messaging();
 
-    document.getElementById('enable-notifications').addEventListener('click', async () => {
-      try {
-        const token = await messaging.getToken({
-          vapidKey: "BDj1xe7CXpoittZlyQCfmGZmwQ1jYiPWp7ZNOurlee7zhXREiUFj9zU5skMIKypRcU-QcfDZpR_nwBCtbRzsZUQ"
-        });
-        console.log('FCM Token:', token);
-        alert('Notifications enabled! Check the console for the token.');
-      } catch (error) {
-        console.error('Error enabling notifications:', error);
-      }
-    });
+    navigator.serviceWorker.register('/door-ring/firebase-messaging-sw.js')
+      .then((registration) => {
+        console.log('Service Worker registered with scope:', registration.scope);
+        messaging.useServiceWorker(registration);
 
-    messaging.onMessage((payload) => {
-      console.log('Message received:', payload);
-      alert('New notification received!');
-    });
+        document.getElementById('enable-notifications').addEventListener('click', async () => {
+          try {
+            const token = await messaging.getToken({
+              vapidKey: "BDj1xe7CXpoittZlyQCfmGZmwQ1jYiPWp7ZNOurlee7zhXREiUFj9zU5skMIKypRcU-QcfDZpR_nwBCtbRzsZUQ",
+              serviceWorkerRegistration: registration
+            });
+            console.log('FCM Token:', token);
+            alert('Notifications enabled! Check the console for the token.');
+          } catch (error) {
+            console.error('Error enabling notifications:', error);
+          }
+        });
+
+        messaging.onMessage((payload) => {
+          console.log('Message received:', payload);
+          alert('New notification received!');
+        });
+
+      })
+      .catch((error) => {
+        console.error('Service Worker registration failed:', error);
+      });
   </script>
 </body>
 </html>
