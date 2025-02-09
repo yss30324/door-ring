@@ -3,62 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sound Notification</title>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-messaging.js"></script>
+  <title>Waiting for Notification</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-messaging.js"></script>
 </head>
 <body>
   <h1>Waiting for Notification...</h1>
-  <button id="enableNotifications">Enable Notifications</button>
+  <button id="enable-notifications">Enable Notifications</button>
+
   <script>
-    // Firebase configuration
-    const firebaseConfig = {
+    // Your Firebase configuration
+    var firebaseConfig = {
       apiKey: "AIzaSyDAtc-bmRRAIdchAj3diwV3nYkRPzIfXkM",
       authDomain: "doorring-abd1a.firebaseapp.com",
+      databaseURL: "https://doorring-abd1a-default-rtdb.firebaseio.com",
       projectId: "doorring-abd1a",
       storageBucket: "doorring-abd1a.appspot.com",
       messagingSenderId: "135920861263",
       appId: "1:135920861263:web:c32e01aa9f3e1312e02a3a",
       measurementId: "G-J6QPQSKTD4"
     };
-
+    
     // Initialize Firebase
-    const app = firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp(firebaseConfig);
     const messaging = firebase.messaging();
 
-    // VAPID 公開金鑰
-    const vapidKey = 'BDj1xe7CXpoittZlyQCfmGZmwQ1jYiPWp7ZNOurlee7zhXREiUFj9zU5skMIKypRcU-QcfDZpR_nwBCtbRzsZUQ';
-
-    // Base64Url to Uint8Array function
-    function urlBase64ToUint8Array(base64String) {
-      const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-      const base64 = (base64String.replace(/-/g, '+').replace(/_/g, '/') + padding);
-      const rawData = atob(base64);
-      const outputArray = new Uint8Array(rawData.length);
-      for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
-      }
-      return outputArray;
-    }
-
-    document.getElementById('enableNotifications').addEventListener('click', async () => {
-      try {
-        const currentToken = await messaging.getToken({ vapidKey: vapidKey });
-        if (currentToken) {
-          console.log('FCM Token:', currentToken);
-          alert('Notifications enabled successfully!');
-        } else {
-          console.log('No registration token available. Request permission to generate one.');
-        }
-      } catch (err) {
-        console.error('Error enabling notifications:', err);
-        alert('Error enabling notifications.');
-      }
+    document.getElementById('enable-notifications').addEventListener('click', () => {
+      messaging.requestPermission()
+        .then(() => {
+          console.log('Notification permission granted.');
+          return messaging.getToken({
+            vapidKey: 'BDj1xe7CXpoittZlyQCfmGZmwQ1jYiPWp7ZNOurlee7zhXREiUFj9zU5skMIKypRcU-QcfDZpR_nwBCtbRzsZUQ'
+          });
+        })
+        .then((token) => {
+          console.log('FCM Token:', token);
+        })
+        .catch((err) => {
+          console.error('Error enabling notifications:', err);
+        });
     });
 
     messaging.onMessage((payload) => {
       console.log('Message received. ', payload);
-      alert('You received a notification!');
+      alert('New notification received!');
     });
   </script>
 </body>
