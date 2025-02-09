@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>B Website - Play Sound</title>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body style="display: flex; justify-content: center; align-items: center; height: 100vh;">
     <h1>Waiting for Signal...</h1>
@@ -28,7 +28,6 @@
         firebase.initializeApp(firebaseConfig);
 
         // Listen for changes in the 'signal' node
-        const database = firebase.database();
         firebase.database().ref('signal').on('value', (snapshot) => {
             const data = snapshot.val();
             if (data && data.triggered) {
