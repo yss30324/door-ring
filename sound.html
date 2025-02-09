@@ -3,84 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>B Website - Play Sound & Notification</title>
+    <title>B Website - FCM Notification</title>
     <link rel="manifest" href="manifest.json">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-messaging.js"></script>
 </head>
 <body style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh;">
     <h1 id="status">Waiting for Signal...</h1>
     <audio id="alertSound" src="sound.mp3" preload="auto"></audio>
-    <button id="enableSound" style="padding: 10px 20px; font-size: 18px; margin-top: 20px;">Enable Doorbell</button>
+    <button id="enableSound" style="padding: 10px 20px; font-size: 18px; margin-top: 20px;">Enable Notifications</button>
 
     <script>
         // Firebase configuration
         const firebaseConfig = {
-            apiKey: "AIzaSyDAtc-bmRRAIdchAj3diwV3nYkRPzIfXkM",
+            apiKey: "AIzaSyDAtc-bmRRAIdchAj3diwV3e1312e02a3a",
             authDomain: "doorring-abd1a.firebaseapp.com",
-            databaseURL: "https://doorring-abd1a-default-rtdb.firebaseio.com",
             projectId: "doorring-abd1a",
-            storageBucket: "doorring-abd1a.firebasestorage.app",
+            storageBucket: "doorring-abd1a.appspot.com",
             messagingSenderId: "135920861263",
-            appId: "1:135920861263:web:c32e01aa9f3e1312e02a3a",
-            measurementId: "G-J6QPQSKTD4"
+            appId: "1:135920861263:web:c32e01aa9f3e1312e02a3a"
         };
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
+        const messaging = firebase.messaging();
 
-        let soundEnabled = false;
-
-        // Register the service worker
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js').then((registration) => {
-                console.log('Service Worker registered with scope:', registration.scope);
-            }).catch((error) => {
-                console.error('Service Worker registration failed:', error);
-            });
-        }
-
+        // Request permission for notifications and get token
         document.getElementById('enableSound').addEventListener('click', () => {
-            // Request notification permission
-            if (Notification.permission !== 'granted') {
-                Notification.requestPermission().then(permission => {
-                    if (permission === 'granted') {
-                        console.log('Notification permission granted.');
-                    }
-                });
-            }
-
-            document.getElementById('alertSound').play().then(() => {
-                soundEnabled = true;
-                document.getElementById('status').innerText = 'Doorbell Enabled! Waiting for Signal...';
+            messaging.requestPermission().then(() => {
+                console.log('Notification permission granted.');
+                return messaging.getToken({ vapidKey: 'BDj1xe7CXpoitlZyQCfmGZmwQ1jYiPWp7ZNOurl...（完整 VAPID 金鑰）' });
+            }).then((token) => {
+                console.log('FCM Token:', token);
+                document.getElementById('status').innerText = 'Notification Enabled! Waiting for Signal...';
                 document.getElementById('enableSound').style.display = 'none';
             }).catch((error) => {
-                console.error('Error enabling sound:', error);
+                console.error('Error getting FCM token:', error);
             });
         });
 
-        // Listen for changes in the 'signal' node
-        firebase.database().ref('signal').on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data && data.triggered) {
-                showNotification('Doorbell Alert', 'Someone pressed the button on A Website!');
-                firebase.database().ref('signal').set({ triggered: false }); // Reset the signal
-            }
+        // Handle foreground messages
+        messaging.onMessage((payload) => {
+            console.log('Message received. ', payload);
+            const alertSound = document.getElementById('alertSound');
+            alertSound.play();
+            document.getElementById('status').innerText = 'Notification received: ' + payload.notification.body;
         });
-
-        // Function to show a notification
-        function showNotification(title, body) {
-            if (Notification.permission === 'granted') {
-                navigator.serviceWorker.ready.then((registration) => {
-                    registration.showNotification(title, {
-                        body: body,
-                        icon: 'icon.png'
-                    });
-                });
-            } else {
-                console.log('Notification permission not granted.');
-            }
-        }
     </script>
 </body>
 </html>
