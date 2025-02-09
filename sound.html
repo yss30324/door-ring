@@ -7,9 +7,10 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
-<body style="display: flex; justify-content: center; align-items: center; height: 100vh;">
-    <h1>Waiting for Signal...</h1>
+<body style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh;">
+    <h1 id="status">Waiting for Signal...</h1>
     <audio id="alertSound" src="sound.mp3" preload="auto"></audio>
+    <button id="enableSound" style="padding: 10px 20px; font-size: 18px; margin-top: 20px;">Enable Doorbell</button>
 
     <script>
         // Firebase configuration
@@ -27,10 +28,22 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
 
+        let soundEnabled = false;
+
+        document.getElementById('enableSound').addEventListener('click', () => {
+            document.getElementById('alertSound').play().then(() => {
+                soundEnabled = true;
+                document.getElementById('status').innerText = 'Doorbell Enabled! Waiting for Signal...';
+                alert('Doorbell sound enabled successfully!');
+            }).catch((error) => {
+                console.error('Error enabling sound:', error);
+            });
+        });
+
         // Listen for changes in the 'signal' node
         firebase.database().ref('signal').on('value', (snapshot) => {
             const data = snapshot.val();
-            if (data && data.triggered) {
+            if (data && data.triggered && soundEnabled) {
                 document.getElementById('alertSound').play(); // Play sound
                 alert('Signal received! Playing sound...');
                 firebase.database().ref('signal').set({ triggered: false }); // Reset the signal
