@@ -1,58 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Firebase Cloud Messaging</title>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-messaging-compat.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B Website - Play Sound</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
-<body>
-  <h1>Waiting for Notification...</h1>
-  <button id="enable-notifications">Enable Notifications</button>
+<body style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh;">
+    <h1 id="status">Waiting for Signal...</h1>
+    <audio id="alertSound" src="sound.mp3" preload="auto"></audio>
+    <button id="enableSound" style="padding: 10px 20px; font-size: 18px; margin-top: 20px;">Enable Doorbell</button>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDAtc-bmRRAIdchAj3diwV3nYkRPzIfXkM",
-      authDomain: "doorring-abd1a.firebaseapp.com",
-      databaseURL: "https://doorring-abd1a-default-rtdb.firebaseio.com",
-      projectId: "doorring-abd1a",
-      storageBucket: "doorring-abd1a.firebasestorage.app",
-      messagingSenderId: "135920861263",
-      appId: "1:135920861263:web:c32e01aa9f3e1312e02a3a",
-      measurementId: "G-J6QPQSKTD4"
-    };
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDAtc-bmRRAIdchAj3diwV3nYkRPzIfXkM",
+            authDomain: "doorring-abd1a.firebaseapp.com",
+            databaseURL: "https://doorring-abd1a-default-rtdb.firebaseio.com",
+            projectId: "doorring-abd1a",
+            storageBucket: "doorring-abd1a.firebasestorage.app",
+            messagingSenderId: "135920861263",
+            appId: "1:135920861263:web:c32e01aa9f3e1312e02a3a",
+            measurementId: "G-J6QPQSKTD4"
+        };
 
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const messaging = firebase.messaging();
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
 
-    navigator.serviceWorker.register('/door-ring/firebase-messaging-sw.js')
-      .then((registration) => {
-        console.log('Service Worker registered with scope:', registration.scope);
+        let soundEnabled = false;
 
-        document.getElementById('enable-notifications').addEventListener('click', async () => {
-          try {
-            const token = await messaging.getToken({
-              vapidKey: "BDj1xe7CXpoittZlyQCfmGZmwQ1jYiPWp7ZNOurlee7zhXREiUFj9zU5skMIKypRcU-QcfDZpR_nwBCtbRzsZUQ",
-              serviceWorkerRegistration: registration
+        document.getElementById('enableSound').addEventListener('click', () => {
+            document.getElementById('alertSound').play().then(() => {
+                soundEnabled = true;
+                document.getElementById('status').innerText = 'Doorbell Enabled! Waiting for Signal...';
+                document.getElementById('enableSound').style.display = 'none'; // 隱藏按鈕
+            }).catch((error) => {
+                console.error('Error enabling sound:', error);
             });
-            console.log('FCM Token:', token);
-            alert('Notifications enabled! Check the console for the token.');
-          } catch (error) {
-            console.error('Error enabling notifications:', error);
-          }
         });
 
-        messaging.onMessage((payload) => {
-          console.log('Message received:', payload);
-          alert('New notification received!');
+        // Listen for changes in the 'signal' node
+        firebase.database().ref('signal').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.triggered && soundEnabled) {
+                document.getElementById('alertSound').play(); // Play sound
+                document.getElementById('status').innerText = 'Signal received! Playing sound...';
+                firebase.database().ref('signal').set({ triggered: false }); // Reset the signal
+            }
         });
-
-      })
-      .catch((error) => {
-        console.error('Service Worker registration failed:', error);
-      });
-  </script>
+    </script>
 </body>
 </html>
