@@ -8,9 +8,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh;">
-    <h1 id="status">門鈴開啟中</h1>
+    <h1 id="status">門鈴關閉中</h1>
     <audio id="alertSound" src="sound2.mp3" preload="auto"></audio>
-    <button id="enableSound" style="padding: 10px 20px; font-size: 18px; margin-top: 20px;">啟動門鈴</button>
+    <button id="toggleDoorbell" style="padding: 10px 20px; font-size: 18px; margin-top: 20px;">啟動電鈴</button>
 
     <script>
         // Firebase 配置
@@ -29,36 +29,56 @@
         firebase.initializeApp(firebaseConfig);
 
         let soundEnabled = false;
+        let firebaseListener = null;
         const statusText = document.getElementById('status');
         const alertSound = document.getElementById('alertSound');
+        const toggleDoorbellBtn = document.getElementById('toggleDoorbell');
 
-        // 啟動門鈴功能
-        document.getElementById('enableSound').addEventListener('click', () => {
-            alertSound.play().then(() => {
+        // 切換電鈴開啟/關閉
+        function toggleDoorbell() {
+            if (!soundEnabled) {
+                // 開啟電鈴
                 soundEnabled = true;
                 statusText.innerText = '門鈴開啟中';
-                document.getElementById('enableSound').style.display = 'none'; // 隱藏按鈕
-            }).catch((error) => {
-                console.error('Error enabling sound:', error);
-            });
-        });
+                toggleDoorbellBtn.innerText = '關閉電鈴';
 
-        // 監聽 Firebase 信號變化
-        firebase.database().ref('signal').on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data && data.triggered && soundEnabled) {
-                statusText.innerText = '叮咚';
-                alertSound.play(); // 播放鈴聲
+                // 啟動 Firebase 監視
+                firebaseListener = firebase.database().ref('signal').on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data && data.triggered && soundEnabled) {
+                        statusText.innerText = '叮咚';
+                        alertSound.play();
 
-                // 播放結束後恢復成「門鈴開啟中」
-                alertSound.onended = () => {
-                    statusText.innerText = '門鈴開啟中';
-                };
+                        // 播放結束後恢復為「門鈴開啟中」
+                        alertSound.onended = () => {
+                            statusText.innerText = '門鈴開啟中';
+                        };
 
-                // 重置 Firebase 信號
-                firebase.database().ref('signal').set({ triggered: false });
+                        // 重置 Firebase 信號
+                        firebase.database().ref('signal').set({ triggered: false });
+                    }
+                });
+
+            } else {
+                // 關閉電鈴
+                soundEnabled = false;
+                statusText.innerText = '門鈴關閉中';
+                toggleDoorbellBtn.innerText = '啟動電鈴';
+
+                // 停止 Firebase 監視
+                if (firebaseListener) {
+                    firebase.database().ref('signal').off('value', firebaseListener);
+                    firebaseListener = null;
+                }
+
+                // 停止播放聲音
+                alertSound.pause();
+                alertSound.currentTime = 0;
             }
-        });
+        }
+
+        // 按鈕事件監聽
+        toggleDoorbellBtn.addEventListener('click', toggleDoorbell);
     </script>
 </body>
 </html>
