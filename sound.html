@@ -8,12 +8,12 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh;">
-    <h1 id="status">Waiting for Signal...</h1>
+    <h1 id="status">門鈴開啟中</h1>
     <audio id="alertSound" src="sound2.mp3" preload="auto"></audio>
-    <button id="enableSound" style="padding: 10px 20px; font-size: 18px; margin-top: 20px;">Enable Doorbell</button>
+    <button id="enableSound" style="padding: 10px 20px; font-size: 18px; margin-top: 20px;">啟動門鈴</button>
 
     <script>
-        // Firebase configuration
+        // Firebase 配置
         const firebaseConfig = {
             apiKey: "AIzaSyDAtc-bmRRAIdchAj3diwV3nYkRPzIfXkM",
             authDomain: "doorring-abd1a.firebaseapp.com",
@@ -25,28 +25,38 @@
             measurementId: "G-J6QPQSKTD4"
         };
 
-        // Initialize Firebase
+        // 初始化 Firebase
         firebase.initializeApp(firebaseConfig);
 
         let soundEnabled = false;
+        const statusText = document.getElementById('status');
+        const alertSound = document.getElementById('alertSound');
 
+        // 啟動門鈴功能
         document.getElementById('enableSound').addEventListener('click', () => {
-            document.getElementById('alertSound').play().then(() => {
+            alertSound.play().then(() => {
                 soundEnabled = true;
-                document.getElementById('status').innerText = 'Doorbell Enabled! Waiting for Signal...';
+                statusText.innerText = '門鈴開啟中';
                 document.getElementById('enableSound').style.display = 'none'; // 隱藏按鈕
             }).catch((error) => {
                 console.error('Error enabling sound:', error);
             });
         });
 
-        // Listen for changes in the 'signal' node
+        // 監聽 Firebase 信號變化
         firebase.database().ref('signal').on('value', (snapshot) => {
             const data = snapshot.val();
             if (data && data.triggered && soundEnabled) {
-                document.getElementById('alertSound').play(); // Play sound
-                document.getElementById('status').innerText = 'Signal received! Playing sound...';
-                firebase.database().ref('signal').set({ triggered: false }); // Reset the signal
+                statusText.innerText = '叮咚';
+                alertSound.play(); // 播放鈴聲
+
+                // 播放結束後恢復成「門鈴開啟中」
+                alertSound.onended = () => {
+                    statusText.innerText = '門鈴開啟中';
+                };
+
+                // 重置 Firebase 信號
+                firebase.database().ref('signal').set({ triggered: false });
             }
         });
     </script>
